@@ -71,7 +71,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void newGame () {
+        mCurrentIndex = 0;
+        countCorrectAnswer = 0;
+        counter = 0;
+        answerCounter = 3;
+        isButtonOff = false;
+        mIsCheater = true;
+        mAnswerCounter.setText(Integer.toString(answerCounter));
 
+        updateQuestion();
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
