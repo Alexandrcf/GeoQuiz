@@ -77,6 +77,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         answerCounter = 3;
         isButtonOff = false;
         mIsCheater = true;
+        mCheatButton.setEnabled(true);
         mAnswerCounter.setText(Integer.toString(answerCounter));
 
         updateQuestion();
