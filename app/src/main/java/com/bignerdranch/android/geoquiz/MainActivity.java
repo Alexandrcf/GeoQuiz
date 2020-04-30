@@ -13,6 +13,8 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import java.text.DecimalFormat;
+
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private ProgressBar progressBar;
@@ -175,10 +177,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void finishGame(){
         countPercentAnswer =  100.0 / mQuestionBank.length * countCorrectAnswer;
+        String formattedСountPercentAnswer = String.format("%.2f", countPercentAnswer);
         AlertDialog.Builder dialog = new AlertDialog.Builder(this);
         dialog.setTitle(R.string.game_over)
                 .setTitle(R.string.percent)
-                .setMessage(String.valueOf(countPercentAnswer  + " %"))
+                .setMessage(String.valueOf(formattedСountPercentAnswer  + " %"))
                 .setPositiveButton(R.string.ok,
                         new DialogInterface.OnClickListener() {
                     @Override
