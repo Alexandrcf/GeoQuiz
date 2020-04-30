@@ -9,10 +9,11 @@
     <string name="question_rusRivers">There are more than 2,8 million rivers in Russia</string>
     <string name="true_button">True</string>
     <string name="false_button">False</string>
-    <string name="next_button">Next!</string>
+    <string name="skip_button">Skip</string>
     <string name="previous_button">Previous</string>
-    <string name="correct_toast">Correct!</string>
-    <string name="incorrect_toast">Incorrect!</string>
+    <string name="correct_answer">Correct!</string>
+    <string name="incorrect_answer">Incorrect!</string>
+    <string name="skip_answer">Skip!</string>
 
     <string name="warning_text">Are you sure you want to do this?</string>
     <string name="show_answer_button">Show answer</string>
@@ -22,4 +23,5 @@
     <string name="ok">Ok</string>
     <string name="game_over">Game over</string>
     <string name="percent">percentage of correct answers: </string>
+    <string name="answer">answer</string>
 </resources>

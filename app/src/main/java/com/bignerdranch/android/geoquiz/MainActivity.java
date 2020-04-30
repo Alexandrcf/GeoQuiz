@@ -1,22 +1,24 @@
 package com.bignerdranch.android.geoquiz;
 
 import androidx.appcompat.app.AppCompatActivity;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageButton;
+import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import static android.widget.Toast.*;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+
+    private ProgressBar progressBar;
+    private int progressStatus = 1;
+    private Handler handler = new Handler();
+    private TextView textView;
 
     private static final String TAG = "QuizActivity";
     private static final String KEY_INDEX = "index";
@@ -25,18 +27,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button mTrueButton;
     private Button mFalseButton;
     private Button mCheatButton;
-    private ImageButton mNextButton;
+    private Button mSkipButton;
     private TextView mQuestionTextView;
     private TextView mAnswerCounter;
 
     private int mCurrentIndex = 0;
-    int countCorrectAnswer = 0;
+    double countCorrectAnswer = 0;
 
     private boolean mIsCheater;
     int counter = 0;
     int answerCounter = 3;
     boolean isButtonOff = false;
-    public double countPercentAnswer;
+    double countPercentAnswer;
 
     private Question[] mQuestionBank = new Question[] {
             new Question(R.string.question_australia, true),
@@ -63,22 +65,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mAnswerCounter = (TextView) findViewById(R.id.tvCountAnswer);
         mTrueButton = (Button) findViewById(R.id.true_button);
         mFalseButton = (Button) findViewById(R.id.false_button);
-        mNextButton = (ImageButton) findViewById(R.id.next_button);
+        mSkipButton = (Button) findViewById(R.id.skip_button);
         mCheatButton = (Button) findViewById(R.id.cheat_button);
 
+        progressBar = (ProgressBar) findViewById(R.id.progress_bar);
+        textView = (TextView) findViewById(R.id.textView);
 
         updateQuestion();
     }
 
     public void newGame () {
+        progressStatus = 1;
+        textView.setText(progressStatus + "/" + progressBar.getMax());
         mCurrentIndex = 0;
         countCorrectAnswer = 0;
         counter = 0;
         answerCounter = 3;
         isButtonOff = false;
-        mIsCheater = true;
         mCheatButton.setEnabled(true);
         mAnswerCounter.setText(Integer.toString(answerCounter));
+        int question = mQuestionBank[mCurrentIndex].getTextResId();
+        mQuestionTextView.setText(question);
 
         updateQuestion();
     }
@@ -112,16 +119,53 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         else {
             if (userPressedTrue == answerIsTrue) {
-                messageResId = R.string.correct_toast;
+                messageResId = R.string.correct_answer;
                 countCorrectAnswer++;
             }
             else {
-                messageResId = R.string.incorrect_toast;
+                messageResId = R.string.incorrect_answer;
             }
         }
         buttonOff();
         isButtonOff = true;
-        Toast.makeText(this, messageResId, LENGTH_SHORT).show();
+        AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+        dialog.setTitle(R.string.answer)
+                .setMessage(messageResId)
+                .setPositiveButton(R.string.ok,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                if (counter < mQuestionBank.length -1){
+                                    counter++;
+                                    mCurrentIndex = (mCurrentIndex + 1) % mQuestionBank.length;
+                                    mIsCheater = false;
+                                    updateQuestion();
+                                }
+                                else {
+                                    finishGame();
+                                }
+                            }
+                        });
+        dialog.show();
+    }
+
+    public void ProgressBar() {
+        progressBar.setMax(mQuestionBank.length);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if (progressStatus < mQuestionBank.length) {
+                    progressStatus++;
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            progressBar.setProgress(progressStatus);
+                            textView.setText(progressStatus + "/" + progressBar.getMax());
+                        }
+                    });
+                }
+            }
+        }).start();
     }
 
     public void buttonOff() {
@@ -130,7 +174,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void finishGame(){
-        countPercentAnswer = 100 / mQuestionBank.length * countCorrectAnswer;
+        countPercentAnswer =  100.0 / mQuestionBank.length * countCorrectAnswer;
         AlertDialog.Builder dialog = new AlertDialog.Builder(this);
         dialog.setTitle(R.string.game_over)
                 .setTitle(R.string.percent)
@@ -161,25 +205,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mTrueButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                ProgressBar();
                 checkAnswer(true);
             }
         });
         mFalseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                ProgressBar();
                 checkAnswer(false);
             }
         });
-        mNextButton.setOnClickListener(new View.OnClickListener() {
+        mSkipButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (counter < mQuestionBank.length -1){
                     counter++;
                     mCurrentIndex = (mCurrentIndex + 1) % mQuestionBank.length;
                     mIsCheater = false;
+                    ProgressBar();
                     updateQuestion();
                 }
                 else {
+                    ProgressBar();
                     finishGame();
                 }
             }
@@ -206,6 +254,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
 
+        progressBar.setMax(mQuestionBank.length);
+        progressBar.setProgress(progressStatus);
+        textView.setText(progressStatus + "/" + progressBar.getMax());
+
         mAnswerCounter.setText(Integer.toString(answerCounter));
         Log.d(TAG, "onResume() called");
     }
@@ -215,13 +267,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onSaveInstanceState(savedInstanceState);
         Log.i(TAG, "onSaveInstanceState");
         savedInstanceState.putInt("currentIndex", mCurrentIndex);
-        savedInstanceState.putInt("countCorrectAnswer", countCorrectAnswer);
+        savedInstanceState.putDouble("countCorrectAnswer", countCorrectAnswer);
         savedInstanceState.putBoolean("mIsCheater", mIsCheater);
         savedInstanceState.putInt("answerCounter", answerCounter);
         savedInstanceState.putBoolean("buttonOff", isButtonOff);
         savedInstanceState.putInt("counter", counter);
+        savedInstanceState.putInt("progressStatus", progressStatus);
         savedInstanceState.putInt(KEY_INDEX, mCurrentIndex);
-
     }
 
     @Override
@@ -233,11 +285,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         mCurrentIndex = savedInstanceState.getInt("currentIndex");
-        mCurrentIndex = savedInstanceState.getInt("countCorrectAnswer");
+        countCorrectAnswer = savedInstanceState.getDouble("countCorrectAnswer");
         mIsCheater = savedInstanceState.getBoolean("mIsCheater");
         answerCounter = savedInstanceState.getInt("answerCounter");
         isButtonOff = savedInstanceState.getBoolean("buttonOff");
         counter = savedInstanceState.getInt("counter");
+        progressStatus = savedInstanceState.getInt("progressStatus");
     }
 
     @Override
