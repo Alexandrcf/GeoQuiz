@@ -78,6 +78,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void newGame () {
         progressStatus = 1;
+        progressBar.setProgress(progressStatus);
         textView.setText(progressStatus + "/" + progressBar.getMax());
         mCurrentIndex = 0;
         countCorrectAnswer = 0;
